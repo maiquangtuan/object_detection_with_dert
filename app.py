@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request
-from models import MobileNet
 import os
-from math import floor
+
 from PIL import Image
 import torch
 from model import *
@@ -31,19 +30,19 @@ def success():
         f = request.files['file']
         saveLocation = f.filename
         f.save(saveLocation)
-        image = Image(saveLocation)
+        image = Image.open(saveLocation)
         im = transform(image).unsqueeze(0)
-
-        outputs = model(image)
+        print(im.size)
+        outputs = model(im)
         probas = outputs['pred_logits'].softmax(-1)[0, :, :-1]
         keep = probas.max(-1).values > 0.9
 
-        bboxes_scaled = rescale_bboxes(outputs['pred_boxes'][0, keep], im.size)
+        bboxes_scaled = rescale_bboxes(outputs['pred_boxes'][0, keep], image.size)
         os.remove(saveLocation)
-        plot_results(im, probas[keep], bboxes_scaled)
+        name = plot_results(image, probas[keep], bboxes_scaled)
 
         # respond with the inference
-        return render_template('inference.html', name=inference, confidence=confidence)
+        return render_template('inference.html', name = name)
 
 
 if __name__ == '__main__':

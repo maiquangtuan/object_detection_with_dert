@@ -1,0 +1,7 @@
+math
+torch
+requests
+PIL
+matplotlib
+IPython
+torchvision
